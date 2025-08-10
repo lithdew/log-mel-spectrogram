@@ -223,8 +223,7 @@ static ALWAYS_INLINE void cfft200_real_input(const float *RESTRICT x,
 }
 
 // Power spectrum using real FFT (RFFT) for N=400
-static ALWAYS_INLINE void power_spectrum_400(const float *RESTRICT x,
-                                             float *RESTRICT power_out,
+static ALWAYS_INLINE void power_spectrum_400(float *RESTRICT x,
                                              Scratch *RESTRICT s) {
   // Compute 200-pt complex FFTs by reading x with stride 2 (evens and odds)
   float *RESTRICT fr = s->fft_re;
@@ -241,10 +240,10 @@ static ALWAYS_INLINE void power_spectrum_400(const float *RESTRICT x,
     const float xor_ = fr[200], xoi = fi[200];
     const float Re = xer + xor_;
     const float Im = xei + xoi;
-    power_out[0] = Re * Re + Im * Im;
+    x[0] = Re * Re + Im * Im;
   }
 // k=1..199
-#pragma omp simd aligned(fr, fi, power_out, W400_re, W400_im : 32)
+#pragma omp simd aligned(fr, fi, x, W400_re, W400_im : 32)
   for (int k = 1; k < 200; ++k) {
     const float xer = fr[k], xei = fi[k];
     const float xor_ = fr[200 + k], xoi = fi[200 + k];
@@ -254,7 +253,7 @@ static ALWAYS_INLINE void power_spectrum_400(const float *RESTRICT x,
     const float ti = xor_ * wi + xoi * wr;
     const float Re = xer + tr;
     const float Im = xei + ti;
-    power_out[k] = Re * Re + Im * Im;
+    x[k] = Re * Re + Im * Im;
   }
   // k=200 (Nyquist)
   {
@@ -262,7 +261,7 @@ static ALWAYS_INLINE void power_spectrum_400(const float *RESTRICT x,
     const float xor0 = fr[200], xoi0 = fi[200];
     const float Re = xer0 - xor0; // W^200 = -1
     const float Im = xei0 - xoi0;
-    power_out[200] = Re * Re + Im * Im;
+    x[200] = Re * Re + Im * Im;
   }
 }
 
@@ -294,7 +293,7 @@ static ALWAYS_INLINE float process_frame(const float *RESTRICT audio,
   }
 
   // Compute power spectrum via real FFT
-  power_spectrum_400(windowed, windowed, s);
+  power_spectrum_400(windowed, s);
 
   // Mel dot-product
   const int stride = n_frames;

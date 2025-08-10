@@ -16,7 +16,15 @@ test("correctly loads a wav file", async () => {
   expect(numSamples).toBe(176000);
 });
 
-test("produces correct log mel spectrogram", async () => {
+test("different padding lengths", async () => {
+  const { data } = await loadWavFile("./samples_jfk.wav");
+  for (let i = 0; i <= 10; i++) {
+    const actual = logMelSpectrogram(data, i * 16_000);
+    expect(actual.length).toBe((128 * ((data.length + i * 16_000) / 160)) | 0);
+  }
+});
+
+test("correctness", async () => {
   const json: number[][] = await Bun.file("mel_example.json").json();
   const expected = new Float32Array(json.flat());
 
