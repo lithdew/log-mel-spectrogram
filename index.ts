@@ -3,8 +3,9 @@
 // 2025-08-10
 
 import { dlopen, FFIType, suffix } from "bun:ffi";
+import path from "node:path";
 
-export const lib = dlopen(`./libmel.${suffix}`, {
+export const lib = dlopen(path.resolve(import.meta.dir, `libmel.${suffix}`), {
   log_mel_spectrogram: {
     args: [FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.ptr],
     returns: FFIType.void,
